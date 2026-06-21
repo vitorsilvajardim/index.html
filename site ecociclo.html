@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoCiclo - Logística Reversa e Economia Circular</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <div id="auth-screen" class="flex-grow flex items-center justify-center px-4 py-12">
+        <div class="bg-white p-8 rounded-2xl shadow-md border border-gray-100 w-full max-w-md">
+            <div class="flex flex-col items-center mb-6">
+                <div class="p-3 bg-emerald-100 text-emerald-600 rounded-full mb-2">
+                    <i data-lucide="refresh-cw" class="w-8 h-8"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900 tracking-wider">EcoCiclo</h1>
+                <p id="auth-subtitle" class="text-gray-500 text-sm mt-1 text-center">Entre na plataforma de logística circular</p>
+            </div>
+
+            <form id="form-auth" class="space-y-4">
+                <div id="campo-nome" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome / Razão Social</label>
+                    <input type="text" id="auth-nome" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                    <input type="email" id="auth-email" required placeholder="seu@email.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                    <input type="password" id="auth-senha" required placeholder="••••••••" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Perfil</label>
+                    <select id="auth-perfil" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                        <option value="gerador">Gerador (Quero solicitar coleta de resíduos)</option>
+                        <option value="transportador">Transportador / Caminhoneiro (Quero buscar e levar cargas)</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="btn-auth" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm cursor-pointer mt-2">
+                    Entrar
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-sm">
+                <p id="auth-toggle-text" class="text-gray-600">
+                    Não tem uma conta? 
+                    <button onclick="alternarAbasAuth()" class="text-emerald-600 font-medium hover:underline cursor-pointer">Cadastre-se</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-screen" class="hidden flex-col flex-grow">
+        <nav class="bg-emerald-600 text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="refresh-cw"></i>
+                    <span class="text-2xl font-bold tracking-wider">EcoCiclo</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <p id="usuario-logado" class="text-sm font-bold"></p>
+                        <p id="usuario-perfil-tag" class="text-xs text-emerald-200 capitalize font-medium"></p>
+                    </div>
+                    <button onclick="logout()" class="text-sm bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-md font-medium transition cursor-pointer flex items-center gap-1">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto px-4 py-8 space-y-8 w-full flex-grow">
+            
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="p-3 bg-emerald-100 text-emerald-600 rounded-lg">
+                        <i data-lucide="truck"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Total no Sistema</p>
+                        <p id="total-coletas" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                        <i data-lucide="weight"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Massa Redirecionada</p>
+                        <p id="total-peso" class="text-2xl font-bold text-gray-900">0 kg</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                    <div class="p-3 bg-amber-100 text-amber-600 rounded-lg">
+                        <i data-lucide="leaf"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Ciclos Concluídos</p>
+                        <p id="eficiencia" class="text-2xl font-bold text-gray-900">0%</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <div id="painel-gerador" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 h-fit hidden">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="text-emerald-600"></i> Solicitar Nova Coleta
+                    </h2>
+                    <form id="form-coleta" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Material Comercial / Resíduo</label>
+                            <input type="text" id="material" required placeholder="Ex: Paletes de Madeira, Sucata Eletrônica" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Peso Estimado (kg)</label>
+                                <input type="number" id="peso" required min="1" placeholder="500" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                                <select id="categoria" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="Madeira">Madeira</option>
+                                    <option value="Metal">Metal</option>
+                                    <option value="Plástico">Plástico</option>
+                                    <option value="Eletrônicos">Eletrônicos</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Endereço de Retirada (Origem)</label>
+                            <input type="text" id="origem" required placeholder="Ex: Galpão A - Av. das Nações, 1500" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Destino da Reciclagem / Reuso</label>
+                            <input type="text" id="destino" required placeholder="Ex: Usina de Triagem Eco-SP" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm cursor-pointer">
+                            Publicar no Mural de Cargas
+                        </button>
+                    </form>
+                </div>
+
+                <div id="painel-info-transportador" class="bg-gradient-to-br from-emerald-700 to-emerald-950 p-6 rounded-xl shadow-md text-white lg:col-span-1 h-fit hidden space-y-4">
+                    <div class="flex items-center gap-2 text-emerald-300 font-bold uppercase tracking-wider text-xs">
+                        <i data-lucide="shield-check"></i> Modo Caminhoneiro Ativo
+                    </div>
+                    <h2 class="text-2xl font-bold">Ganhe otimizando fretes de retorno</h2>
+                    <p class="text-emerald-100 text-sm leading-relaxed">
+                        Evite rodar com a caçamba ou baú vazios. Aceite as ordens de logística reversa disponíveis ao lado que coincidam com sua rota atual e monetization sua viagem ajudando o planeta.
+                    </p>
+                    <div class="border-t border-emerald-600/50 pt-4 text-xs text-emerald-200">
+                        * Confirme a retirada no local de origem e mude o status para atualizar o gerador em tempo real.
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            <i data-lucide="boxes" class="text-emerald-600"></i> Monitoramento do Fluxo Circular
+                        </h2>
+                    </div>
+                    <div id="lista-materiais" class="space-y-4 max-h-[550px] overflow-y-auto pr-2">
+                        </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-gray-900 text-gray-400 text-center py-6 border-t border-gray-800 text-sm w-full">
+            &copy; 2026 EcoCiclo Plataforma Operacional. Logística Reversa Integrada.
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let modoLogin = true; 
+        let usuarioSessao = JSON.parse(sessionStorage.getItem('ecociclo_sessao')) || null;
+        let fluxos = JSON.parse(localStorage.getItem('ecociclo_fluxos')) || [];
+
+        // DOM Elements
+        const authScreen = document.getElementById('auth-screen');
+        const appScreen = document.getElementById('app-screen');
+        const formAuth = document.getElementById('form-auth');
+        const campoNome = document.getElementById('campo-nome');
+        const btnAuth = document.getElementById('btn-auth');
+        const authSubtitle = document.getElementById('auth-subtitle');
+        const authToggleText = document.getElementById('auth-toggle-text');
+        
+        // Paineis de Perfis
+        const painelGerador = document.getElementById('painel-gerador');
+        const painelInfoTransportador = document.getElementById('painel-info-transportador');
+
+        function alternarAbasAuth() {
+            modoLogin = !modoLogin;
+            if (modoLogin) {
+                authSubtitle.innerText = "Entre na plataforma de logística circular";
+                campoNome.classList.add('hidden');
+                document.getElementById('auth-nome').removeAttribute('required');
+                btnAuth.innerText = "Entrar";
+                authToggleText.innerHTML = `Não tem uma conta? <button type="button" onclick="alternarAbasAuth()" class="text-emerald-600 font-medium hover:underline cursor-pointer">Cadastre-se</button>`;
+            } else {
+                authSubtitle.innerText = "Crie sua conta corporativa ou de transportes";
+                campoNome.classList.remove('hidden');
+                document.getElementById('auth-nome').setAttribute('required', 'true');
+                btnAuth.innerText = "Criar Conta";
+                authToggleText.innerHTML = `Já tem uma conta? <button type="button" onclick="alternarAbasAuth()" class="text-emerald-600 font-medium hover:underline cursor-pointer">Faça Login</button>`;
+            }
+        }
+
+        formAuth.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const senha = document.getElementById('auth-senha').value;
+            const perfil = document.getElementById('auth-perfil').value;
+            let usuarios = JSON.parse(localStorage.getItem('ecociclo_usuarios')) || [];
+
+            if (modoLogin) {
+                const usuarioEncontrado = usuarios.find(u => u.email === email && u.senha === senha);
+                if (usuarioEncontrado) {
+                    sessionStorage.setItem('ecociclo_sessao', JSON.stringify(usuarioEncontrado));
+                    usuarioSessao = usuarioEncontrado;
+                    verificarSessao();
+                } else {
+                    alert("Dados incorretos ou usuário não cadastrado.");
+                }
+            } else {
+                if (usuarios.some(u => u.email === email)) {
+                    alert("Este e-mail já está em uso.");
+                    return;
+                }
+                const nome = document.getElementById('auth-nome').value;
+                const novoUsuario = { nome, email, senha, perfil };
+                usuarios.push(novoUsuario);
+                localStorage.setItem('ecociclo_usuarios', JSON.stringify(usuarios));
+                sessionStorage.setItem('ecociclo_sessao', JSON.stringify(novoUsuario));
+                usuarioSessao = novoUsuario;
+                verificarSessao();
+            }
+            formAuth.reset();
+        });
+
+        function verificarSessao() {
+            if (usuarioSessao) {
+                authScreen.classList.add('hidden');
+                appScreen.classList.remove('hidden');
+                appScreen.classList.add('flex');
+                
+                document.getElementById('usuario-logado').innerText = usuarioSessao.nome;
+                document.getElementById('usuario-perfil-tag').innerText = `Perfil: ${usuarioSessao.perfil === 'gerador' ? 'Solicitante (Gerador)' : 'Motorista (Transportador)'}`;
+
+                // Divide as telas dependendo de quem logou
+                if (usuarioSessao.perfil === 'gerador') {
+                    painelGerador.classList.remove('hidden');
+                    painelInfoTransportador.classList.add('hidden');
+                } else {
+                    painelGerador.classList.add('hidden');
+                    painelInfoTransportador.classList.remove('hidden');
+                }
+
+                salvarEAtualizar();
+            } else {
+                authScreen.classList.remove('hidden');
+                appScreen.classList.add('hidden');
+                appScreen.classList.remove('flex');
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('ecociclo_sessao');
+            usuarioSessao = null;
+            verificarSessao();
+        }
+
+        // --- ENGENHARIA DE COLETAS ---
+        const formColeta = document.getElementById('form-coleta');
+        const listaMateriais = document.getElementById('lista-materials');
+
+        formColeta.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const novoFluxo = {
+                id: Date.now(),
+                solicitante: usuarioSessao.nome,
+                material: document.getElementById('material').value,
+                peso: parseFloat(document.getElementById('peso').value),
+                categoria: document.getElementById('categoria').value,
+                origem: document.getElementById('origem').value,
+                destino: document.getElementById('destino').value,
+                status: 'Aguardando Coleta', // Estados: Aguardando Coleta -> Em Trânsito -> Entregue no Destino
+                motorista: null
+            };
+            fluxos.unshift(novoFluxo);
+            salvarEAtualizar();
+            formColeta.reset();
+        });
+
+        function salvarEAtualizar() {
+            localStorage.setItem('ecociclo_fluxos', JSON.stringify(fluxos));
+            renderizarPainel();
+            renderizarLista();
+        }
+
+        function renderizarPainel() {
+            const totalColetas = fluxos.length;
+            const totalPeso = fluxos.reduce((acc, item) => acc + item.peso, 0);
+            const concluidos = fluxos.filter(item => item.status === 'Entregue no Destino').length;
+
+            document.getElementById('total-coletas').innerText = totalColetas;
+            document.getElementById('total-peso').innerText = `${totalPeso.toLocaleString('pt-BR')} kg`;
+            document.getElementById('eficiencia').innerText = `${concluidos} concluídas`;
+        }
+
+        // Caminhoneiro atualiza o fluxo logístico
+        function alterarStatusCarga(id) {
+            fluxos = fluxos.map(item => {
+                if (item.id === id) {
+                    if (item.status === 'Aguardando Coleta') {
+                        item.status = 'Em Trânsito';
+                        item.motorista = usuarioSessao.nome;
+                    } else if (item.status === 'Em Trânsito') {
+                        item.status = 'Entregue no Destino';
+                    }
+                }
+                return item;
+            });
+            salvarEAtualizar();
+        }
+
+        function renderizarLista() {
+            const container = document.getElementById('lista-materiais');
+            if (fluxos.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-center py-8">Nenhuma ordem de coleta ou frete reverso disponível.</p>`;
+                return;
+            }
+
+            container.innerHTML = fluxos.map(item => {
+                let statusStyle = 'bg-amber-100 text-amber-800';
+                let acaoBotao = '';
+                
+                // Configuração visual baseada no status e permissão do usuário
+                const souOMotorista = item.motorista === usuarioSessao.nome;
+                const ehGerador = usuarioSessao.perfil === 'gerador';
+
+                if (item.status === 'Aguardando Coleta') {
+                    statusStyle = 'bg-blue-100 text-blue-800';
+                    if (!ehGerador) {
+                        acaoBotao = `<button onclick="alterarStatusCarga(${item.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer w-full sm:w-auto">Aceitar Coleta / Coletar</button>`;
+                    } else {
+                        acaoBotao = `<span class="text-xs text-gray-400 font-medium italic">Aguardando motorista aceitar</span>`;
+                    }
+                } else if (item.status === 'Em Trânsito') {
+                    statusStyle = 'bg-orange-100 text-orange-800';
+                    if (!ehGerador && souOMotorista) {
+                        acaoBotao = `<button onclick="alterarStatusCarga(${item.id})" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer w-full sm:w-auto">Confirmar Entrega no Destino</button>`;
+                    } else {
+                        acaoBotao = `<span class="text-xs text-orange-600 font-medium">Em trânsito com: ${item.motorista}</span>`;
+                    }
+                } else if (item.status === 'Entregue no Destino') {
+                    statusStyle = 'bg-emerald-100 text-emerald-800';
+                    acaoBotao = `<span class="text-xs text-emerald-600 font-bold flex items-center gap-1">✓ Ciclo Fechado com Sucesso</span>`;
+                }
+
+                return `
+                    <div class="border border-gray-200 rounded-xl p-5 bg-white shadow-2xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-gray-300 transition">
+                        <div class="space-y-2 w-full">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${statusStyle}">${item.status}</span>
+                                <span class="text-xs bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full font-medium">${item.categoria}</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-950">${item.material}</h3>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm text-gray-600">
+                                <p class="flex items-center gap-1"><span class="text-gray-400 font-medium">Origem:</span> <strong>${item.origem}</strong></p>
+                                <p class="flex items-center gap-1"><span class="text-gray-400 font-medium">Destino:</span> <strong>${item.destino}</strong></p>
+                                <p class="flex items-center gap-1"><span class="text-gray-400 font-medium">Peso:</span> <strong class="text-emerald-700">${item.peso} kg</strong></p>
+                                <p class="flex items-center gap-1"><span class="text-gray-400 font-medium">Solicitante:</span> <strong>${item.solicitante}</strong></p>
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-auto text-right min-w-[160px]">
+                            ${acaoBotao}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // Inicialização automática
+        verificarSessao();
+    </script>
+</body>
+</html>
